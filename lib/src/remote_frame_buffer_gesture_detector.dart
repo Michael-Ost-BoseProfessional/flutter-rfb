@@ -1,126 +1,97 @@
 import 'dart:isolate';
+import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/widgets.dart' hide Image;
 import 'package:flutter_rfb/src/remote_frame_buffer_isolate_messages.dart';
 import 'package:fpdart/fpdart.dart';
 
-class RemoteFrameBufferGestureDetector extends GestureDetector {
+class RemoteFrameBufferGestureDetector extends StatelessWidget {
   final Image _image;
-  final Size _remoteFrameBufferWidgetSize;
   final Option<SendPort> _sendPort;
 
-  RemoteFrameBufferGestureDetector({
+  const RemoteFrameBufferGestureDetector({
     super.key,
     required final Image image,
-    required final Size remoteFrameBufferWidgetSize,
     required final Option<SendPort> sendPort,
-    super.child,
   })  : _image = image,
-        _remoteFrameBufferWidgetSize = remoteFrameBufferWidgetSize,
         _sendPort = sendPort;
 
   @override
-  GestureTapDownCallback? get onSecondaryTapDown =>
-      (final TapDownDetails details) => _sendPort.match(
-            () {},
-            (final SendPort sendPort) => sendPort.send(
-              RemoteFrameBufferIsolateSendMessage.pointerEvent(
-                button1Down: false,
-                button2Down: false,
-                button3Down: true,
-                button4Down: false,
-                button5Down: false,
-                button6Down: false,
-                button7Down: false,
-                button8Down: false,
-                x: (details.localPosition.dx /
-                        _remoteFrameBufferWidgetSize.width *
-                        _image.width)
-                    .toInt(),
-                y: (details.localPosition.dy /
-                        _remoteFrameBufferWidgetSize.height *
-                        _image.height)
-                    .toInt(),
-              ),
-            ),
-          );
+  Widget build(final BuildContext context) {
+    void send(final RemoteFrameBufferIsolateSendMessage message) =>
+        _sendPort.match(() {}, (final SendPort sendPort) => sendPort.send(message));
 
-  @override
-  GestureTapUpCallback? get onSecondaryTapUp =>
-      (final TapUpDetails details) => _sendPort.match(
-            () {},
-            (final SendPort sendPort) => sendPort.send(
-              RemoteFrameBufferIsolateSendMessage.pointerEvent(
-                button1Down: false,
-                button2Down: false,
-                button3Down: false,
-                button4Down: false,
-                button5Down: false,
-                button6Down: false,
-                button7Down: false,
-                button8Down: false,
-                x: (details.localPosition.dx /
-                        _remoteFrameBufferWidgetSize.width *
-                        _image.width)
-                    .toInt(),
-                y: (details.localPosition.dy /
-                        _remoteFrameBufferWidgetSize.height *
-                        _image.height)
-                    .toInt(),
-              ),
-            ),
-          );
+    Point<int> coords(final Offset pos) {
+      final RenderBox box = context.findRenderObject()! as RenderBox;
+      return Point<int>(
+        (pos.dx / box.size.width  * _image.width ).toInt(),
+        (pos.dy / box.size.height * _image.height).toInt(),
+      );
+    }
 
-  @override
-  GestureTapDownCallback? get onTapDown =>
-      (final TapDownDetails details) => _sendPort.match(
-            () {},
-            (final SendPort sendPort) => sendPort.send(
-              RemoteFrameBufferIsolateSendMessage.pointerEvent(
-                button1Down: true,
-                button2Down: false,
-                button3Down: false,
-                button4Down: false,
-                button5Down: false,
-                button6Down: false,
-                button7Down: false,
-                button8Down: false,
-                x: (details.localPosition.dx /
-                        _remoteFrameBufferWidgetSize.width *
-                        _image.width)
-                    .toInt(),
-                y: (details.localPosition.dy /
-                        _remoteFrameBufferWidgetSize.height *
-                        _image.height)
-                    .toInt(),
-              ),
-            ),
-          );
-
-  @override
-  GestureTapUpCallback? get onTapUp =>
-      (final TapUpDetails details) => _sendPort.match(
-            () {},
-            (final SendPort sendPort) => sendPort.send(
-              RemoteFrameBufferIsolateSendMessage.pointerEvent(
-                button1Down: false,
-                button2Down: false,
-                button3Down: false,
-                button4Down: false,
-                button5Down: false,
-                button6Down: false,
-                button7Down: false,
-                button8Down: false,
-                x: (details.localPosition.dx /
-                        _remoteFrameBufferWidgetSize.width *
-                        _image.width)
-                    .toInt(),
-                y: (details.localPosition.dy /
-                        _remoteFrameBufferWidgetSize.height *
-                        _image.height)
-                    .toInt(),
-              ),
-            ),
-          );
+    return GestureDetector(
+      onSecondaryTapDown: (final TapDownDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: false,
+          button2Down: false,
+          button3Down: true,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      onSecondaryTapUp: (final TapUpDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: false,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      onTapDown: (final TapDownDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: true,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      onTapUp: (final TapUpDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: false,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      child: RawImage(image: _image),
+    );
+  }
 }

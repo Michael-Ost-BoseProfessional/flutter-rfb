@@ -7,7 +7,6 @@ import 'package:dart_rfb/dart_rfb.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' hide Image;
 import 'package:flutter/services.dart';
-import 'package:flutter_rfb/src/child_size_notifier_widget.dart';
 import 'package:flutter_rfb/src/extensions/logical_keyboard_key_extensions.dart';
 import 'package:flutter_rfb/src/remote_frame_buffer_client_isolate.dart';
 import 'package:flutter_rfb/src/remote_frame_buffer_gesture_detector.dart';
@@ -54,7 +53,6 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
   Option<Image> _image = none();
   Option<Isolate> _isolate = none();
   Option<SendPort> _isolateSendPort = none();
-  final ValueNotifier<Size> _sizeValueNotifier = ValueNotifier<Size>(Size.zero);
   Option<StreamSubscription<Object?>> _streamSubscription = none();
 
   @override
@@ -109,15 +107,10 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
         ),
       );
 
-  SizeTrackingWidget _buildImage({required final Image image}) =>
-      SizeTrackingWidget(
-        sizeValueNotifier: _sizeValueNotifier,
-        child: RemoteFrameBufferGestureDetector(
-          image: image,
-          remoteFrameBufferWidgetSize: _sizeValueNotifier.value,
-          sendPort: _isolateSendPort,
-          child: RawImage(image: image),
-        ),
+  Widget _buildImage({required final Image image}) =>
+      RemoteFrameBufferGestureDetector(
+        image: image,
+        sendPort: _isolateSendPort,
       );
 
   void _decodeAndUpdateImage({
