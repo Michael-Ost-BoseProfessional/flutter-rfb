@@ -32,6 +32,7 @@ class RemoteFrameBufferGestureDetector extends StatelessWidget {
 
     return GestureDetector(
       onSecondaryTapDown: (final TapDownDetails details) {
+        Focus.of(context).requestFocus();
         final Point<int> p = coords(details.localPosition);
         send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
           button1Down: false,
@@ -62,6 +63,7 @@ class RemoteFrameBufferGestureDetector extends StatelessWidget {
         ));
       },
       onTapDown: (final TapDownDetails details) {
+        Focus.of(context).requestFocus();
         final Point<int> p = coords(details.localPosition);
         send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
           button1Down: true,

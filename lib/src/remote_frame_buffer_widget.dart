@@ -49,6 +49,7 @@ class RemoteFrameBufferWidget extends StatefulWidget {
 @visibleForTesting
 class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
   late Timer _clipBoardMonitorTimer;
+  final FocusNode _focusNode = FocusNode();
   Option<ByteData> _frameBuffer = none();
   Option<Image> _image = none();
   Option<Isolate> _isolate = none();
@@ -56,21 +57,26 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
   Option<StreamSubscription<Object?>> _streamSubscription = none();
 
   @override
-  Widget build(final BuildContext context) => _frameBuffer
-      .flatMap(
-        (final ByteData frameBuffer) => frameBuffer.buffer
-                .asUint8List(
-                  frameBuffer.offsetInBytes,
-                  frameBuffer.lengthInBytes,
-                )
-                .where((final int byte) => byte != 0)
-                .isNotEmpty
-            ? _image
-            : none<Image>(),
-      )
-      .match(
-        _buildConnecting,
-        (final Image image) => _buildImage(image: image),
+  Widget build(final BuildContext context) => Focus(
+        focusNode: _focusNode,
+        autofocus: true,
+        onKeyEvent: (final _, final __) => KeyEventResult.handled,
+        child: _frameBuffer
+            .flatMap(
+              (final ByteData frameBuffer) => frameBuffer.buffer
+                      .asUint8List(
+                        frameBuffer.offsetInBytes,
+                        frameBuffer.lengthInBytes,
+                      )
+                      .where((final int byte) => byte != 0)
+                      .isNotEmpty
+                  ? _image
+                  : none<Image>(),
+            )
+            .match(
+              _buildConnecting,
+              (final Image image) => _buildImage(image: image),
+            ),
       );
 
   @override
@@ -90,6 +96,7 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
       (final Isolate isolate) => isolate.kill(),
     );
     RawKeyboard.instance.removeListener(_rawKeyEventListener);
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -309,16 +316,25 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
     );
   }
 
-  void _rawKeyEventListener(final RawKeyEvent rawKeyEvent) =>
-      _isolateSendPort.match(
-        () {},
-        (final SendPort sendPort) => sendPort.send(
-          RemoteFrameBufferIsolateSendMessage.keyEvent(
-            down: rawKeyEvent.isKeyPressed(rawKeyEvent.logicalKey),
-            key: rawKeyEvent.logicalKey.asXWindowSystemKey(),
-          ),
-        ),
+  void _rawKeyEventListener(final RawKeyEvent rawKeyEvent) {
+    if (!_focusNode.hasFocus) return;
+    _isolateSendPort.match(
+      () {},
+      (final SendPort sendPort) {
+          final bool down = rawKeyEvent.isKeyPressed(rawKeyEvent.logicalKey);
+          final int key = rawKeyEvent.logicalKey.asXWindowSystemKey();
+          _logger.fine(
+            'key ${down ? "down" : "up"}: ${rawKeyEvent.logicalKey.keyLabel} ($key)',
+          );
+          sendPort.send(
+            RemoteFrameBufferIsolateSendMessage.keyEvent(
+              down: down,
+              key: key,
+            ),
+          );
+        },
       );
+  }
 
   /// Updates [frameBuffer] with the given [rectangle]s.
   @visibleForTesting
