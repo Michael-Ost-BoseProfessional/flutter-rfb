@@ -350,7 +350,7 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
               final int frameBufferX = rectangle.x + x;
               final int frameBufferY = rectangle.y + y;
               final int pixelBytes =
-                  rectangle.byteData.getUint32((y * rectangle.width + x) * 4);
+                  rectangle.byteData.getUint32((y * rectangle.width + x) * 4) | 0xFF;
               frameBuffer.setUint32(
                 ((frameBufferY * frameBufferSize.width + frameBufferX) * 4)
                     .toInt(),
