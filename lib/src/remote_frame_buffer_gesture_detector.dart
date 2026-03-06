@@ -2,6 +2,7 @@ import 'dart:isolate';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart' hide Image;
 import 'package:flutter_rfb/src/remote_frame_buffer_isolate_messages.dart';
 import 'package:fpdart/fpdart.dart';
@@ -30,7 +31,24 @@ class RemoteFrameBufferGestureDetector extends StatelessWidget {
       );
     }
 
-    return GestureDetector(
+    return MouseRegion(
+      cursor: SystemMouseCursors.none,
+      onHover: (final PointerHoverEvent event) {
+        final Point<int> p = coords(event.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: false,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      child: GestureDetector(
       onSecondaryTapDown: (final TapDownDetails details) {
         Focus.of(context).requestFocus();
         final Point<int> p = coords(details.localPosition);
@@ -124,6 +142,7 @@ class RemoteFrameBufferGestureDetector extends StatelessWidget {
         ));
       },
       child: RawImage(image: _image),
+      ),
     );
   }
 }
