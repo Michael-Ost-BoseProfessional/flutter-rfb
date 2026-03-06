@@ -93,6 +93,36 @@ class RemoteFrameBufferGestureDetector extends StatelessWidget {
           y: p.y,
         ));
       },
+      onPanUpdate: (final DragUpdateDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: true,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
+      onPanEnd: (final DragEndDetails details) {
+        final Point<int> p = coords(details.localPosition);
+        send(RemoteFrameBufferIsolateSendMessage.pointerEvent(
+          button1Down: false,
+          button2Down: false,
+          button3Down: false,
+          button4Down: false,
+          button5Down: false,
+          button6Down: false,
+          button7Down: false,
+          button8Down: false,
+          x: p.x,
+          y: p.y,
+        ));
+      },
       child: RawImage(image: _image),
     );
   }
