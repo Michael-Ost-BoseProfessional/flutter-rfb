@@ -15,7 +15,7 @@ Future<void> startRemoteFrameBufferClient(
   final RemoteFrameBufferIsolateInitMessage initMessage,
 ) async {
   Logger.root
-    ..level = Level.FINE
+    ..level = Level.WARNING
     ..onRecord.listen(
       (final LogRecord logRecord) {
         if (kDebugMode) {
