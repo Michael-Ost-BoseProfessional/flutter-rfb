@@ -303,10 +303,12 @@ class RemoteFrameBufferWidgetState extends State<RemoteFrameBufferWidget> {
               (final String text) => _isolateSendPort.match(
                 () {},
                 (final SendPort sendPort) {
+                  // RFB ClientCutText is Latin-1 only; drop characters outside U+00FF.
+                  final String latin1Text = text.replaceAll(RegExp(r'[^\x00-\xFF]'), '');
                   lastClipBoardContent = some(text);
                   sendPort.send(
                     RemoteFrameBufferIsolateSendMessage.clipBoardUpdate(
-                      text: text,
+                      text: latin1Text,
                     ),
                   );
                 },
